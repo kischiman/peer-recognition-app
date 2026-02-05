@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// In-memory storage for Vercel (serverless environment)
+let memoryDatabase: Database | null = null;
+
 export interface Chapter {
   id: string;
   title: string;
@@ -65,7 +68,25 @@ interface Database {
 
 const dbPath = path.join(process.cwd(), 'data', 'database.json');
 
+// Check if we're in a serverless environment (like Vercel)
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || !process.env.NODE_ENV || process.env.NODE_ENV === 'production';
+
 export function readDatabase(): Database {
+  // Use in-memory storage for serverless environments
+  if (isServerless) {
+    if (!memoryDatabase) {
+      memoryDatabase = {
+        epochs: [],
+        participants: [],
+        contributions: [],
+        comments: [],
+        distributions: []
+      };
+    }
+    return memoryDatabase;
+  }
+
+  // Use file storage for local development
   try {
     const data = fs.readFileSync(dbPath, 'utf8');
     return JSON.parse(data);
@@ -81,7 +102,25 @@ export function readDatabase(): Database {
 }
 
 export function writeDatabase(data: Database): void {
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  // Use in-memory storage for serverless environments
+  if (isServerless) {
+    memoryDatabase = data;
+    return;
+  }
+
+  // Use file storage for local development
+  try {
+    // Ensure data directory exists
+    const dataDir = path.dirname(dbPath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Failed to write database:', error);
+    // Fall back to memory storage if file write fails
+    memoryDatabase = data;
+  }
 }
 
 export function createChapter(title: string, participantNames: string[], contributionDeadline?: Date | string, distributionDeadline?: Date | string, contributionDuration?: number, distributionDuration?: number): Chapter {

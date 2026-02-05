@@ -109,9 +109,14 @@ export default function AdminPanel() {
         setDistributionDeadline(distributionDefault.toISOString().slice(0, 16));
         
         fetchChapters();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create chapter:', errorData);
+        alert(`Failed to create chapter: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to create epoch:', error);
+      alert('Failed to create chapter. Please check the console for details.');
     }
     
     setLoading(false);

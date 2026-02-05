@@ -13,7 +13,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       const chapter = createEpoch(title, participants, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
       res.status(201).json(chapter);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create chapter' });
+      console.error('Error creating chapter:', error);
+      res.status(500).json({ error: 'Failed to create chapter', details: error.message });
     }
   } else if (req.method === 'GET') {
     const { latest } = req.query;
