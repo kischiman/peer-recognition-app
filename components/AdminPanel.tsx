@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Play, Square, BarChart3, Trash2, Edit, Users, UserPlus, UserMinus, Download } from 'lucide-react';
+import { Plus, Play, Square, BarChart3, Trash2, Edit, Users, UserPlus, UserMinus, Download, Calendar, Save, X } from 'lucide-react';
 import { generateChapterCSV, downloadCSV, ChapterExportData } from '../lib/csv-export';
 
 interface Chapter {
@@ -10,6 +10,8 @@ interface Chapter {
   status: 'setup' | 'contribution' | 'distribution' | 'finished';
   startTime?: Date;
   endTime?: Date;
+  contributionDeadline?: Date;
+  distributionDeadline?: Date;
   createdAt: Date;
 }
 
@@ -25,6 +27,10 @@ export default function AdminPanel() {
   const [newParticipantName, setNewParticipantName] = useState('');
   const [chapterParticipants, setChapterParticipants] = useState<any[]>([]);
   const [loadingParticipant, setLoadingParticipant] = useState(false);
+  const [editingDeadlines, setEditingDeadlines] = useState<string | null>(null);
+  const [editContributionDeadline, setEditContributionDeadline] = useState('');
+  const [editDistributionDeadline, setEditDistributionDeadline] = useState('');
+  const [savingDeadlines, setSavingDeadlines] = useState(false);
 
   useEffect(() => {
     fetchChapters();
@@ -268,6 +274,57 @@ export default function AdminPanel() {
     }
   };
 
+  const startEditingDeadlines = (chapter: Chapter) => {
+    setEditingDeadlines(chapter.id);
+    
+    // Set current deadlines as default values
+    const contributionDeadline = chapter.contributionDeadline 
+      ? new Date(chapter.contributionDeadline).toISOString().slice(0, 16)
+      : '';
+    const distributionDeadline = chapter.distributionDeadline 
+      ? new Date(chapter.distributionDeadline).toISOString().slice(0, 16)
+      : '';
+      
+    setEditContributionDeadline(contributionDeadline);
+    setEditDistributionDeadline(distributionDeadline);
+  };
+
+  const cancelEditingDeadlines = () => {
+    setEditingDeadlines(null);
+    setEditContributionDeadline('');
+    setEditDistributionDeadline('');
+  };
+
+  const saveDeadlines = async () => {
+    if (!editingDeadlines) return;
+    
+    setSavingDeadlines(true);
+    
+    try {
+      const response = await fetch(`/api/epochs/${editingDeadlines}/deadlines`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contributionDeadline: editContributionDeadline || undefined,
+          distributionDeadline: editDistributionDeadline || undefined
+        })
+      });
+
+      if (response.ok) {
+        cancelEditingDeadlines();
+        fetchChapters(); // Refresh to show updated deadlines
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update deadlines: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to update deadlines:', error);
+      alert('Failed to update deadlines. Please try again.');
+    }
+    
+    setSavingDeadlines(false);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'setup': return 'bg-gray-100 text-gray-800';
@@ -339,6 +396,15 @@ export default function AdminPanel() {
         >
           <Users className="w-3 h-3 mr-1" />
           Manage Participants
+        </button>
+
+        {/* Edit Deadlines Button */}
+        <button
+          onClick={() => startEditingDeadlines(chapter)}
+          className="flex items-center px-3 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 text-sm"
+        >
+          <Calendar className="w-3 h-3 mr-1" />
+          Edit Deadlines
         </button>
 
         {/* Export CSV Button */}
@@ -611,6 +677,76 @@ export default function AdminPanel() {
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deadline Editing Modal */}
+      {editingDeadlines && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold">Edit Chapter Deadlines</h3>
+                <button
+                  onClick={cancelEditingDeadlines}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Contribution Deadline */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contribution Phase Deadline
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editContributionDeadline}
+                    onChange={(e) => setEditContributionDeadline(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    When participants must finish writing contributions
+                  </p>
+                </div>
+
+                {/* Distribution Deadline */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Distribution Phase Deadline
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editDistributionDeadline}
+                    onChange={(e) => setEditDistributionDeadline(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    When participants must finish distributing points
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={cancelEditingDeadlines}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveDeadlines}
+                  disabled={savingDeadlines}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  {savingDeadlines ? 'Saving...' : 'Save Deadlines'}
                 </button>
               </div>
             </div>
