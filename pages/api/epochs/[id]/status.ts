@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { updateEpochStatus, getEpoch } from '../../../../lib/database';
+import { updateEpochStatusAsync, getChapterAsync } from '../../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
   if (req.method === 'PUT') {
@@ -12,10 +12,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      updateEpochStatus(id as string, status);
-      const epoch = getEpoch(id as string);
+      await updateEpochStatusAsync(id as string, status);
+      const epoch = await getChapterAsync(id as string);
       res.status(200).json(epoch);
     } catch (error) {
+      console.error('Failed to update chapter status:', error);
       res.status(500).json({ error: 'Failed to update epoch status' });
     }
   } else {

@@ -507,6 +507,13 @@ export async function createChapterAsync(
   return createChapter(title, participantNames, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
 }
 
+export async function getChapterAsync(id: string): Promise<Chapter | null> {
+  if (hasRedisCredentials) {
+    return RedisDB.getChapter(id);
+  }
+  return getChapter(id);
+}
+
 export async function getAllChaptersAsync(): Promise<Chapter[]> {
   if (hasRedisCredentials) {
     return RedisDB.getAllChapters();
