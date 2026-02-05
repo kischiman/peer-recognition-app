@@ -117,14 +117,26 @@ peer-recognition-app/
    yarn install
    ```
 
-3. **Start the development server**:
+3. **Set up database (optional - for persistent storage)**:
+   - **Option A: Upstash Redis (recommended for production)**:
+     1. Create account at [Upstash](https://upstash.com/)
+     2. Create a new Redis database
+     3. Copy `.env.example` to `.env.local`
+     4. Add your Upstash credentials:
+        ```bash
+        UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+        UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+        ```
+   - **Option B: Local development**: No setup needed - uses JSON file storage
+
+4. **Start the development server**:
    ```bash
    npm run dev
    # or
    yarn dev
    ```
 
-4. **Open your browser**:
+5. **Open your browser**:
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Usage

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createEpoch, getActiveEpoch, getLatestEpoch } from '../../../lib/database';
+import { createEpochAsync, getActiveEpochAsync, getLatestEpochAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { title, participants, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration } = req.body;
     
@@ -10,17 +10,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const chapter = createEpoch(title, participants, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
+      const chapter = await createEpochAsync(title, participants, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
       res.status(201).json(chapter);
     } catch (error) {
       console.error('Error creating chapter:', error);
-      res.status(500).json({ error: 'Failed to create chapter', details: error.message });
+      res.status(500).json({ error: 'Failed to create chapter', details: error instanceof Error ? error.message : 'Unknown error' });
     }
   } else if (req.method === 'GET') {
     const { latest } = req.query;
     
     try {
-      const epoch = latest === 'true' ? getLatestEpoch() : getActiveEpoch();
+      const epoch = latest === 'true' ? await getLatestEpochAsync() : await getActiveEpochAsync();
       res.status(200).json(epoch);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get epoch' });

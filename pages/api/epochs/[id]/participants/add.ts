@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { addParticipantToChapter } from '../../../../../lib/database';
+import { addParticipantToChapterAsync } from '../../../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -19,7 +19,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const participant = addParticipantToChapter(id, name);
+    const participant = await addParticipantToChapterAsync(id, name);
     
     if (participant) {
       res.status(201).json(participant);

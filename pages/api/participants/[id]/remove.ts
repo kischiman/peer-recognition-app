@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { removeParticipantFromChapter } from '../../../../lib/database';
+import { removeParticipantFromChapterAsync } from '../../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
     res.setHeader('Allow', ['DELETE']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -14,7 +14,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const success = removeParticipantFromChapter(id);
+    const success = await removeParticipantFromChapterAsync(id);
     
     if (success) {
       res.status(200).json({ message: 'Participant removed successfully' });

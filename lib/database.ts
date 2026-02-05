@@ -2,7 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-// In-memory storage for Vercel (serverless environment)
+// Import Redis database functions
+import * as RedisDB from './redis-database';
+
+// In-memory storage for serverless environment fallback
 let memoryDatabase: Database | null = null;
 
 export interface Chapter {
@@ -67,6 +70,9 @@ interface Database {
 }
 
 const dbPath = path.join(process.cwd(), 'data', 'database.json');
+
+// Check if Redis credentials are available
+const hasRedisCredentials = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
 
 // Check if we're in a serverless environment (like Vercel)
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || !process.env.NODE_ENV || process.env.NODE_ENV === 'production';
@@ -467,3 +473,147 @@ export function getParticipantDistributions(participantId: string, chapterId: st
   const db = readDatabase();
   return db.distributions.filter(d => d.fromParticipantId === participantId && d.chapterId === chapterId);
 }
+
+// =============================================================================
+// ASYNC REDIS-ENABLED VERSIONS (for API routes)
+// =============================================================================
+
+export async function readDatabaseAsync(): Promise<Database> {
+  if (hasRedisCredentials) {
+    return RedisDB.readDatabase();
+  }
+  return readDatabase();
+}
+
+export async function writeDatabaseAsync(data: Database): Promise<void> {
+  if (hasRedisCredentials) {
+    return RedisDB.writeDatabase(data);
+  }
+  return writeDatabase(data);
+}
+
+export async function createChapterAsync(
+  title: string, 
+  participantNames: string[], 
+  contributionDeadline?: Date | string, 
+  distributionDeadline?: Date | string, 
+  contributionDuration?: number, 
+  distributionDuration?: number
+): Promise<Chapter> {
+  if (hasRedisCredentials) {
+    return RedisDB.createChapter(title, participantNames, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
+  }
+  return createChapter(title, participantNames, contributionDeadline, distributionDeadline, contributionDuration, distributionDuration);
+}
+
+export async function getAllChaptersAsync(): Promise<Chapter[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getAllChapters();
+  }
+  return getAllChapters();
+}
+
+export async function getActiveChapterAsync(): Promise<Chapter | null> {
+  if (hasRedisCredentials) {
+    return RedisDB.getActiveChapter();
+  }
+  return getActiveChapter();
+}
+
+export async function getLatestChapterAsync(): Promise<Chapter | null> {
+  if (hasRedisCredentials) {
+    return RedisDB.getLatestChapter();
+  }
+  return getLatestChapter();
+}
+
+export async function updateChapterStatusAsync(id: string, status: Chapter['status']): Promise<void> {
+  if (hasRedisCredentials) {
+    return RedisDB.updateChapterStatus(id, status);
+  }
+  return updateChapterStatus(id, status);
+}
+
+export async function deleteChapterAsync(id: string): Promise<boolean> {
+  if (hasRedisCredentials) {
+    return RedisDB.deleteChapter(id);
+  }
+  return deleteChapter(id);
+}
+
+export async function getParticipantsAsync(chapterId: string): Promise<Participant[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getParticipants(chapterId);
+  }
+  return getParticipants(chapterId);
+}
+
+export async function addParticipantToChapterAsync(chapterId: string, participantName: string): Promise<Participant | null> {
+  if (hasRedisCredentials) {
+    return RedisDB.addParticipantToChapter(chapterId, participantName);
+  }
+  return addParticipantToChapter(chapterId, participantName);
+}
+
+export async function removeParticipantFromChapterAsync(participantId: string): Promise<boolean> {
+  if (hasRedisCredentials) {
+    return RedisDB.removeParticipantFromChapter(participantId);
+  }
+  return removeParticipantFromChapter(participantId);
+}
+
+export async function createContributionAsync(participantId: string, authorId: string, chapterId: string, description: string): Promise<Contribution> {
+  if (hasRedisCredentials) {
+    return RedisDB.createContribution(participantId, authorId, chapterId, description);
+  }
+  return createContribution(participantId, authorId, chapterId, description);
+}
+
+export async function getContributionsAsync(chapterId: string): Promise<Contribution[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getContributions(chapterId);
+  }
+  return getContributions(chapterId);
+}
+
+export async function createCommentAsync(contributionId: string, participantId: string, chapterId: string, text: string): Promise<Comment> {
+  if (hasRedisCredentials) {
+    return RedisDB.createComment(contributionId, participantId, chapterId, text);
+  }
+  return createComment(contributionId, participantId, chapterId, text);
+}
+
+export async function getCommentsAsync(contributionId: string): Promise<Comment[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getComments(contributionId);
+  }
+  return getComments(contributionId);
+}
+
+export async function distributePointsAsync(fromParticipantId: string, distributions: Array<{contributionId: string, points: number}>, chapterId: string): Promise<void> {
+  if (hasRedisCredentials) {
+    return RedisDB.distributePoints(fromParticipantId, distributions, chapterId);
+  }
+  return distributePoints(fromParticipantId, distributions, chapterId);
+}
+
+export async function getDistributionsAsync(chapterId: string): Promise<Distribution[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getDistributions(chapterId);
+  }
+  return getDistributions(chapterId);
+}
+
+export async function getParticipantDistributionsAsync(participantId: string, chapterId: string): Promise<Distribution[]> {
+  if (hasRedisCredentials) {
+    return RedisDB.getParticipantDistributions(participantId, chapterId);
+  }
+  return getParticipantDistributions(participantId, chapterId);
+}
+
+// Legacy async aliases
+export const createEpochAsync = createChapterAsync;
+export const getAllEpochsAsync = getAllChaptersAsync;
+export const getActiveEpochAsync = getActiveChapterAsync;
+export const getLatestEpochAsync = getLatestChapterAsync;
+export const updateEpochStatusAsync = updateChapterStatusAsync;

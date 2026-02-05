@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getParticipants } from '../../../../lib/database';
+import { getParticipantsAsync } from '../../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
   if (req.method === 'GET') {
     try {
-      const participants = getParticipants(id as string);
+      const participants = await getParticipantsAsync(id as string);
       res.status(200).json(participants);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get participants' });

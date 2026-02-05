@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getAllEpochs } from '../../../lib/database';
+import { getAllEpochsAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      const epochs = getAllEpochs();
+      const epochs = await getAllEpochsAsync();
       res.status(200).json(epochs);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get epochs' });
