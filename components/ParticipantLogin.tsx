@@ -141,7 +141,7 @@ export default function ParticipantLogin({ onLogin }: Props) {
               <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
               <div>
                 <div>
-                  <span className="font-medium text-blue-900">Write about each team member's contributions</span>
+                  <span className="font-medium text-blue-900">Write about each team member&apos;s contributions</span>
                   {selectedChapter && chapters.find(c => c.id === selectedChapter)?.contributionDeadline && (
                     <div className="text-blue-700 text-xs mt-1 flex items-center space-x-2">
                       <Clock className="w-3 h-3" />

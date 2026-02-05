@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Trophy, MessageSquare } from 'lucide-react';
 
@@ -56,11 +56,7 @@ export default function ResultsDashboard({ epochId }: Props) {
   const [aiSummaries, setAiSummaries] = useState<Record<string, string>>({});
   const [loadingSummary, setLoadingSummary] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    fetchResults();
-  }, [epochId]);
-
-  const fetchResults = async () => {
+  const fetchResults = useCallback(async () => {
     try {
       const [participantsRes, contributionsRes, distributionsRes] = await Promise.all([
         fetch(`/api/epochs/${epochId}/participants`),
@@ -117,7 +113,11 @@ export default function ResultsDashboard({ epochId }: Props) {
       console.error('Failed to fetch results:', error);
     }
     setLoading(false);
-  };
+  }, [epochId]);
+
+  useEffect(() => {
+    fetchResults();
+  }, [fetchResults]);
 
   const getParticipantName = (participantId: string) => {
     const participant = participants.find(p => p.id === participantId);

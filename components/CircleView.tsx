@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageCircle, Edit3, Save, X } from 'lucide-react';
 import CountdownTimer from './CountdownTimer';
 import { getPhaseEndTime } from '../lib/timer-utils';
@@ -52,13 +52,7 @@ export default function CircleView({ currentParticipant, onLogout }: Props) {
   const [newComment, setNewComment] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, [currentParticipant]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [epochRes, participantsRes, contributionsRes] = await Promise.all([
         fetch('/api/epochs'),
@@ -101,7 +95,13 @@ export default function CircleView({ currentParticipant, onLogout }: Props) {
       console.error('Failed to fetch data:', error);
     }
     setLoading(false);
-  };
+  }, [currentParticipant.chapterId, currentParticipant.id]);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const startEditing = (contributionId: string, currentDescription: string) => {
     setEditingContribution(contributionId);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Gift, Save, RotateCcw } from 'lucide-react';
 import CountdownTimer from './CountdownTimer';
 import { getPhaseEndTime } from '../lib/timer-utils';
@@ -49,11 +49,7 @@ export default function DistributionView({ currentParticipant, epochId, epoch }:
 
   const TOTAL_POINTS = 100;
 
-  useEffect(() => {
-    fetchData();
-  }, [currentParticipant, epochId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [contributionsRes, participantsRes, distributionsRes] = await Promise.all([
         fetch(`/api/contributions?epochId=${epochId}`),
@@ -96,7 +92,11 @@ export default function DistributionView({ currentParticipant, epochId, epoch }:
       console.error('Failed to fetch data:', error);
     }
     setLoading(false);
-  };
+  }, [currentParticipant.id, epochId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getParticipantName = (participantId: string) => {
     const participant = participants.find(p => p.id === participantId);
