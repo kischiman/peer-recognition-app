@@ -118,14 +118,14 @@ peer-recognition-app/
    ```
 
 3. **Set up database (optional - for persistent storage)**:
-   - **Option A: Upstash Redis (recommended for production)**:
+   - **Option A: Upstash KV (recommended for production)**:
      1. Create account at [Upstash](https://upstash.com/)
-     2. Create a new Redis database
+     2. Create a new KV database
      3. Copy `.env.example` to `.env.local`
-     4. Add your Upstash credentials:
+     4. Add your Upstash KV credentials:
         ```bash
-        UPSTASH_REDIS_REST_URL=your_upstash_redis_url
-        UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+        KV_REST_API_URL=your_kv_rest_api_url
+        KV_REST_API_TOKEN=your_kv_rest_api_token
         ```
    - **Option B: Local development**: No setup needed - uses JSON file storage
 

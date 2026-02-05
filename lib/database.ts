@@ -71,8 +71,9 @@ interface Database {
 
 const dbPath = path.join(process.cwd(), 'data', 'database.json');
 
-// Check if Redis credentials are available
-const hasRedisCredentials = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+// Check if Redis credentials are available (KV or standard REST)
+const hasRedisCredentials = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) || 
+                            (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 
 // Check if we're in a serverless environment (like Vercel)
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || !process.env.NODE_ENV || process.env.NODE_ENV === 'production';

@@ -67,14 +67,23 @@ let redis: Redis | null = null;
 
 function getRedisClient(): Redis {
   if (!redis) {
-    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-      throw new Error('Missing Upstash Redis credentials. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.');
+    // Check for KV credentials first (your setup)
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      redis = new Redis({
+        url: process.env.KV_REST_API_URL,
+        token: process.env.KV_REST_API_TOKEN,
+      });
     }
-    
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
+    // Fallback to standard Redis REST credentials
+    else if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      });
+    }
+    else {
+      throw new Error('Missing Upstash Redis credentials. Please set KV_REST_API_URL and KV_REST_API_TOKEN or UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.');
+    }
   }
   return redis;
 }
