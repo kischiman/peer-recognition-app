@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Play, Square, BarChart3, Trash2, Edit, Users, UserPlus, UserMinus } from 'lucide-react';
+import { Plus, Play, Square, BarChart3, Trash2, Edit, Users, UserPlus, UserMinus, Download } from 'lucide-react';
+import { generateChapterCSV, downloadCSV, ChapterExportData } from '../lib/csv-export';
 
 interface Chapter {
   id: string;
@@ -244,6 +245,29 @@ export default function AdminPanel() {
     setNewParticipantName('');
   };
 
+  const exportChapterData = async (chapterId: string, chapterTitle: string) => {
+    try {
+      const response = await fetch(`/api/epochs/${chapterId}/export`);
+      if (response.ok) {
+        const exportData: ChapterExportData = await response.json();
+        const csvContent = generateChapterCSV(exportData);
+        
+        // Generate filename with chapter title and date
+        const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const safeTitle = chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const filename = `chapter_${safeTitle}_${date}.csv`;
+        
+        downloadCSV(csvContent, filename);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to export chapter data: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to export chapter:', error);
+      alert('Failed to export chapter data. Please try again.');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'setup': return 'bg-gray-100 text-gray-800';
@@ -315,6 +339,15 @@ export default function AdminPanel() {
         >
           <Users className="w-3 h-3 mr-1" />
           Manage Participants
+        </button>
+
+        {/* Export CSV Button */}
+        <button
+          onClick={() => exportChapterData(chapter.id, chapter.title)}
+          className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm"
+        >
+          <Download className="w-3 h-3 mr-1" />
+          Export CSV
         </button>
 
         {/* Results Button */}
