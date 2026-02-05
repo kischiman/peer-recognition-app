@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { updateContribution, deleteContribution } from '../../../lib/database';
+import { updateContributionAsync, deleteContributionAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
   
   if (!id || typeof id !== 'string') {
@@ -16,7 +16,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const success = updateContribution(id, description);
+      const success = await updateContributionAsync(id, description);
       
       if (success) {
         res.status(200).json({ message: 'Contribution updated successfully' });
@@ -29,7 +29,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   } else if (req.method === 'DELETE') {
     try {
-      const success = deleteContribution(id);
+      const success = await deleteContributionAsync(id);
       
       if (success) {
         res.status(200).json({ message: 'Contribution deleted successfully' });

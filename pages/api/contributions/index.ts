@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createContribution, getContributions } from '../../../lib/database';
+import { createContributionAsync, getContributionsAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { participantId, authorId, epochId, description } = req.body;
     
@@ -10,9 +10,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const contribution = createContribution(participantId, authorId, epochId, description);
+      const contribution = await createContributionAsync(participantId, authorId, epochId, description);
       res.status(201).json(contribution);
     } catch (error) {
+      console.error('Failed to create contribution:', error);
       res.status(500).json({ error: 'Failed to create contribution' });
     }
   } else if (req.method === 'GET') {
@@ -23,9 +24,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const contributions = getContributions(epochId as string);
+      const contributions = await getContributionsAsync(epochId as string);
       res.status(200).json(contributions);
     } catch (error) {
+      console.error('Failed to get contributions:', error);
       res.status(500).json({ error: 'Failed to get contributions' });
     }
   } else {

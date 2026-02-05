@@ -577,6 +577,20 @@ export async function createContributionAsync(participantId: string, authorId: s
   return createContribution(participantId, authorId, chapterId, description);
 }
 
+export async function updateContributionAsync(contributionId: string, description: string): Promise<boolean> {
+  if (hasRedisCredentials) {
+    return RedisDB.updateContribution(contributionId, description);
+  }
+  return updateContribution(contributionId, description);
+}
+
+export async function deleteContributionAsync(contributionId: string): Promise<boolean> {
+  if (hasRedisCredentials) {
+    return RedisDB.deleteContribution(contributionId);
+  }
+  return deleteContribution(contributionId);
+}
+
 export async function getContributionsAsync(chapterId: string): Promise<Contribution[]> {
   if (hasRedisCredentials) {
     return RedisDB.getContributions(chapterId);
