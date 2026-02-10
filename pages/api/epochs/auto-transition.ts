@@ -1,14 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { readDatabase, writeDatabase, Epoch } from '../../../lib/database';
+import { readDatabaseAsync, writeDatabaseAsync, Epoch } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
   try {
-    const db = readDatabase();
+    const db = await readDatabaseAsync();
     const now = new Date();
     let updated = false;
 
@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     if (updated) {
-      writeDatabase(db);
+      await writeDatabaseAsync(db);
     }
 
     res.status(200).json({ 

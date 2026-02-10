@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createComment, getComments } from '../../../lib/database';
+import { createCommentAsync, getCommentsAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { contributionId, participantId, epochId, text } = req.body;
     
@@ -10,7 +10,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const comment = createComment(contributionId, participantId, epochId, text);
+      const comment = await createCommentAsync(contributionId, participantId, epochId, text);
       res.status(201).json(comment);
     } catch (error) {
       res.status(500).json({ error: 'Failed to create comment' });
@@ -23,7 +23,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      const comments = getComments(contributionId as string);
+      const comments = await getCommentsAsync(contributionId as string);
       res.status(200).json(comments);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get comments' });

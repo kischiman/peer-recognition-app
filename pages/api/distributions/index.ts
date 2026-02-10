@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { distributePoints, getDistributions, getParticipantDistributions } from '../../../lib/database';
+import { distributePointsAsync, getDistributionsAsync, getParticipantDistributionsAsync } from '../../../lib/database';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { participantId, distributions, epochId } = req.body;
     
@@ -15,7 +15,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-      distributePoints(participantId, distributions, epochId);
+      await distributePointsAsync(participantId, distributions, epochId);
       res.status(200).json({ success: true });
     } catch (error) {
       res.status(500).json({ error: 'Failed to distribute points' });
@@ -29,8 +29,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     try {
       const distributions = participantId 
-        ? getParticipantDistributions(participantId as string, epochId as string)
-        : getDistributions(epochId as string);
+        ? await getParticipantDistributionsAsync(participantId as string, epochId as string)
+        : await getDistributionsAsync(epochId as string);
       res.status(200).json(distributions);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get distributions' });
